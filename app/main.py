@@ -23,3 +23,7 @@ def multiply(c: int, d: int):
 @app.get("/square/{c}")
 def squaring(c: int):
     return {"product": c * c}
+
+@app.get("/working")  # zone apex
+def zone_apex2():
+    return {"Is this working?": "yes"}
