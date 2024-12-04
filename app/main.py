@@ -1,43 +1,73 @@
 #!/usr/bin/env python3
 
-from fastapi import Request, FastAPI
-from typing import Optional
-from pydantic import BaseModel
-import pandas as pd
 import json
 import os
+from fastapi import FastAPI
+import mysql.connector
+from mysql.connector import Error
 
-api = FastAPI()
+app = FastAPI()
 
-@api.get("/")  # zone apex
+app = FastAPI()
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+DBHOST = "ds2022.cqee4iwdcaph.us-east-1.rds.amazonaws.com"
+DBUSER = "admin"
+DBPASS = os.getenv('DBPASS')
+DB = "hva4zb"
+
+@app.get("/") #zone ape
 def zone_apex():
-    return {"Hi": "Lab6"}
+	return {"Good Day": "Sunshine!"}
 
-@api.get("/add/{a}/{b}")
-def add(a: int, b: int):
-    return {"sum": a + b}
+@app.get('/genres')
+def get_genres():
+    db = mysql.connector.connect(user=DBUSER, host=DBHOST, password=DBPASS, database=DB)
+    cur=db.cursor()
+    query = "SELECT * FROM genres ORDER BY genreid;"
+    try:    
+        cur.execute(query)
+        headers=[x[0] for x in cur.description]
+        results = cur.fetchall()
+        json_data=[]
+        for result in results:
+            json_data.append(dict(zip(headers,result)))
+	cur.close()
+	db.close()
+        return(json_data)
+    except Error as e:
+	print("MySQL Error: ", str(e))
+        cur.close()
+        db.close()
+        return {"Error": "MySQL Error: " + str(e)}
 
-@api.get("/multiply/{c}/{d}")
-def multiply(c: int, d: int):
-    return {"product": c * d}
+@app.get('/songs')
+async def get_genres():
+    db = mysql.connector.connect(user=DBUSER, host=DBHOST, password=DBPASS, database=DB, ssl_disabled=True)
+    cur = db.cursor()
+    query = "SELECT songs.title, songs.album, songs.artist, songs.year, songs.file, songs.image, genres.genre FROM songs JOIN genres WHERE songs.genre = genres.genreid ORDER BY songs.title;"
+    try:
+        cur.execute(query)
+        headers=[x[0] for x in cur.description]
+        results = cur.fetchall()
+        json_data=[]
+        for result in results:
+            json_data.append(dict(zip(headers,result)))
+	cur.close()
+	db.close()
+        return(json_data)
+    except Error as e:
+        print("MySQL Error: ", str(e))
+	cur.close()
+	db.close()
+        return None
 
-@api.get("/square/{c}")
-def squaring(c: int):
-    return {"product": c * c}
 
-@api.get("/working")  # zone apex
-def zone_apex2():
-    return {"Is this working?": "yes"}
-
-@api.get("/customer/{idx}")
-def customer(idx: int):
-    #read the data into a df
-    df = pd.read_csv("../customers.csv")
-    #filter the data based on the index
-    customer = df.iloc[idx]
-    return customer.to_dict()
-
-@api.post("/get_body")
-def get_body(request: Request):
-    return request.json()
 
