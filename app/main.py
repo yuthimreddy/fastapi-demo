@@ -29,6 +29,7 @@ async def get_genres():
     db = mysql.connector.connect(user=DBUSER, host=DBHOST, password=DBPASS, database=DB, ssl_disabled=True)
     cur = db.cursor()
     query = "SELECT * FROM genres ORDER BY genreid;"
+
     try:    
         cur.execute(query)
         headers=[x[0] for x in cur.description]
@@ -38,7 +39,6 @@ async def get_genres():
             json_data.append(dict(zip(headers,result)))
         return(json_data)
     except Error as e:
-        print("MySQL Error: ", str(e))
         return {"Error": "MySQL Error: " + str(e)}
     finally:
         cur.close()
@@ -66,6 +66,7 @@ def get_songs():
         songs.genre = genres.genreid 
     ORDER BY songs.id;
     """
+
     try:
         cur.execute(query)
         headers = [x[0] for x in cur.description]
@@ -73,14 +74,12 @@ def get_songs():
         json_data = []
         for result in results:
             json_data.append(dict(zip(headers, result)))
-        cur.close()
-        db.close()
         return json_data
     except Error as e:
-        cur.close()
-        db.close()
         return {"Error": "MySQL Error: " + str(e)}
-
+    finally:
+	cur.close()
+	db.close()
 
 
 @app.get("/") #zone apex
