@@ -46,7 +46,7 @@ async def get_genres():
 
 
 @app.get('/songs')
-def get_songs():
+async def get_genres():
     db = mysql.connector.connect(user=DBUSER, host=DBHOST, password=DBPASS, database=DB)
     cur = db.cursor()
     query = """
@@ -78,8 +78,8 @@ def get_songs():
     except Error as e:
         return {"Error": "MySQL Error: " + str(e)}
     finally:
-	cur.close()
-	db.close()
+        cur.close()
+        db.close()
 
 
 @app.get("/") #zone apex
